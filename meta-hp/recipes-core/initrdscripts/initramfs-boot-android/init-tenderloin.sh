@@ -21,12 +21,15 @@ mount_rootfs() {
     then
         info "Found $ROOT volume"
         mount /dev/store/$ROOT /rfs 
-        if [ -e /rfs/etc/webos-release ]
+        # sanity-check rootfs by checking that specific path exists
+        # (automatic pass if distro_rootfs_file is unset, since /rfs/
+        # mountpoint does exist)
+        if [ -e /rfs/${distro_rootfs_file} ]
         then
           info "Using $ROOT as rootfs"
           return 0 # success
         else
-          info "Volume $ROOT does not contain LuneOS rootfs"
+          info "Volume $ROOT does not contain rootfs"
           umount /rfs
         fi
     fi
@@ -68,9 +71,9 @@ then
    fail "Failed to start LVM"
 fi
 
-# look for "luneos-root" volume, with generic "ext3fs" volume as fallback
+# look for distro-specific volume, with generic "ext3fs" volume as fallback
 mkdir -m 0755 /rfs
-mount_rootfs luneos-root || mount_rootfs ext3fs || fail "Failed to mount root"
+mount_rootfs ${distro_name}-root || mount_rootfs ext3fs || fail "Failed to mount root"
 
 info "Done mounting rootfs!"
 
